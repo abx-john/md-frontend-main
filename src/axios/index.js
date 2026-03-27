@@ -15,7 +15,7 @@ let url;
 if (isDev) {
   url = "http://localhost:8000";
 } else {
-  url = "https://api.enterprise.business";
+  url = "https://api.mdenterprise.business";
 }
 
 // Create axios instance
