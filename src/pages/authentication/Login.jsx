@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -24,6 +24,8 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -52,6 +54,10 @@ export default function LoginPage() {
         dispatch(stopBusy());
       });
   };
+
+  useEffect(()=>{
+    setCookies()
+  },[])
 
   return (
     <Box
