@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { use, useMemo, useState } from "react";
 import DataTable from "../components/DataTable";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
@@ -14,10 +14,13 @@ import DataTableProduct from "../components/DataTableProduct";
 import { FormatShapes } from "@mui/icons-material";
 import { DataGrid } from "@mui/x-data-grid";
 import { useParams } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { showSnackbar } from "../store/snackbarSlice";
 
 export default function SaleList() {
 
   const params = useParams()
+  const dispatch = useDispatch();
 
   const columns = useMemo(
     () => [
@@ -110,7 +113,7 @@ export default function SaleList() {
       setRefreshKey((k) => k + 1);
       setDialogOpen(false);
       // optionally show a snackbar via your redux or notistack
-      // dispatch(showSnackbar({ message: "Created", severity: "success" }));
+      dispatch(showSnackbar({ message: "New Payment Created", severity: "success" }));
     } catch (err) {
       console.error("Create error:", err);
       // show error to user

@@ -10,6 +10,7 @@ import DialogContentText from '@mui/material/DialogContentText';
 import { isMobile } from 'mobile-device-detect';
 import { useDispatch } from "react-redux";
 import { setBusy } from "../store/busySlice";
+import { showSnackbar } from "../store/snackbarSlice";
 
 
 const Sale = () => {
@@ -124,7 +125,20 @@ const Sale = () => {
             products:products,
             paymentMode,
             paidAmount
-        }).then(res => console.log(res))
+        }).then(res => {
+       dispatch(showSnackbar({ message: "New Sales Created", severity: "success" }));
+        setCustomer(null);
+            setProducts([]);
+            setPaymentMode("cash");
+            setPaidAmount(0);
+            setPaymentModal(false);
+        })
+        .catch(err => {
+            console.error("Sale creation failed:", err);
+            dispatch(showSnackbar({ message: "Sale creation failed", severity: "error" }))
+
+
+        })
     }
 
     useEffect(() => {
@@ -426,7 +440,7 @@ const Sale = () => {
                         gap: 2,
                         marginTop: 2,
                     }}>
-                        
+
                     <FormControl fullWidth>
                         <InputLabel id="product-label">Warehouse</InputLabel>
 

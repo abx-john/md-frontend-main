@@ -278,6 +278,7 @@ export default function Product() {
               <TextField required label="Quantity" type="number" size="small" value={form.quantity} onChange={handleChange("quantity")} fullWidth />
               <TextField required label="Unit" size="small" value={form.unit} onChange={handleChange("unit")} fullWidth />
               <TextField required label="Cost Price" size="small" value={form.cost_price} onChange={handleChange("cost_price")} fullWidth />
+              <TextField required label="Cost Price Before Discount" size="small" value={form.cost_price_before_discount} onChange={handleChange("cost_price_before_discount")} fullWidth />
               <TextField label="Description" required multiline rows={4} size="small" value={form.description} onChange={handleChange("description")} fullWidth />
               <ImageUpload form={form} setForm={setForm}></ImageUpload>
               <div>

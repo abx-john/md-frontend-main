@@ -115,11 +115,11 @@ export default function DataTable({
         const data = res.data || {};
 
 
-        if(serverSideInclude){
+        if (serverSideInclude) {
           setRowSelectionModel({
             type: 'include',
             ids: new Set(
-              data.data.filter((item) => item[serverSideInclude]===true).map((item) => item.id)
+              data.data.filter((item) => item[serverSideInclude] === true).map((item) => item.id)
             ),
           })
         }
@@ -128,7 +128,7 @@ export default function DataTable({
         const total = data.total ?? data.meta?.total ?? (Array.isArray(rowsData) ? rowsData.length : 0);
 
         setRows(rowsData);
-        if(setRowsCallback){
+        if (setRowsCallback) {
           setRowsCallback(rowsData);
         }
         setRowCount(Number(total));
@@ -311,6 +311,19 @@ export default function DataTable({
         pageSize={pageState.pageSize}
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
+        paginationModel={{
+          page: pageState.page,
+          pageSize: pageState.pageSize,
+        }}
+
+        onPaginationModelChange={(model) => {
+          setPageState({
+            page: model.page,
+            pageSize: model.pageSize,
+          });
+        }}
+
+        pageSizeOptions={[10]}
         rowsPerPageOptions={[10]}
         sortingMode="server"
         sortModel={sortModel}

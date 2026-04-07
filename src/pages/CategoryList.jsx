@@ -77,7 +77,7 @@ export default function Category() {
     fetchWarehouses().then(res => {
       setWarehouses(res.data);
     })
-      .catch(() => dispatch(showSnackbar({ message: "Failed to load warehouses", severity: "error" })))
+      .catch(() => (showSnackbar({ message: "Failed to load warehouses", severity: "error" })))
       .finally(() => {
         dispatch(stopBusy());
       });
