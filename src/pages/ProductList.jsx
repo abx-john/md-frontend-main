@@ -7,71 +7,64 @@ import {
   Card,
   CardContent,
   Typography,
-  Button,
-  Select,
-  MenuItem,
-  TextField,
   Chip,
   Stack,
-
+  IconButton,
+  InputBase,
+  Paper,
+  Slide,
 } from "@mui/material";
-import { Pagination } from "swiper/modules";
-import "swiper/css/pagination";
+
 import SearchIcon from "@mui/icons-material/Search";
 import CloseIcon from "@mui/icons-material/Close";
-import { IconButton, InputBase, Paper, Slide } from "@mui/material";
-
 
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay } from "swiper/modules";
+import { Autoplay, Pagination } from "swiper/modules";
 import "swiper/css";
+import "swiper/css/pagination";
+
 import { useNavigate } from "react-router-dom";
 
-// 🔧 CHANGE THIS to your Laravel storage URL
 const BASE_URL = `${url}/storage/`;
-
-
 
 export default function ProductPage() {
   const navigate = useNavigate();
+
   const [products, setProducts] = useState([]);
-  // const [filteredProducts, setFilteredProducts] = useState([])
-  const [selectedChip, setSelectedChip] = useState([])
+  const [selectedChip, setSelectedChip] = useState([]);
   const [openSearch, setOpenSearch] = useState(false);
   const [query, setQuery] = useState("");
   const [categories, setCategories] = useState([]);
 
   const handleSearch = () => {
     console.log("Search:", query);
-    // 👉 call your API here
   };
 
   const getProduct = () => {
     api.get("api/productList").then((res) => {
       setProducts(res.data || []);
-      setCategories(Array.from(
-        new Map(
-          res.data
-            .flatMap(e => e.category || [])
-            .map(item => [item.id, item])
-        ).values()
-      ))
-
-      console.log(categories)
-
-
+      setCategories(
+        Array.from(
+          new Map(
+            res.data
+              .flatMap((e) => e.category || [])
+              .map((item) => [item.id, item])
+          ).values()
+        )
+      );
     });
-  }
+  };
 
   useEffect(() => {
-    getProduct()
+    getProduct();
   }, []);
 
   const filteredProducts = React.useMemo(() => {
     let prods = products;
 
+
     if (selectedChip.length > 0) {
-      prods = prods.filter(prod =>
+      prods = prods.filter((prod) =>
         selectedChip.includes(prod.category.id)
       );
     }
@@ -79,32 +72,34 @@ export default function ProductPage() {
     if (query) {
       const q = query.toLowerCase();
 
-      prods = prods.filter(prod =>
-        prod.name.toLowerCase().includes(q) ||
-        prod.category.name.toLowerCase().includes(q) ||
-        prod.description.toLowerCase().includes(q)
+      prods = prods.filter(
+        (prod) =>
+          prod.name.toLowerCase().includes(q) ||
+          prod.category.name.toLowerCase().includes(q) ||
+          prod.description.toLowerCase().includes(q)
       );
     }
 
     return prods;
+
+
   }, [products, selectedChip, query]);
 
   return (
-    <Box sx={{
-      maxWidth: "1400px",
-      mx: "auto",        // center
-      px: { xs: 2, md: 4 },
-      py: 3,
-      minHeight: "100vh",
-    }}>
-      <Stack sx={{
-
-      }} direction="row" justifyContent="flex-end" mb={2}>
+    <Box
+      sx={{
+        maxWidth: "1400px",
+        mx: "auto",
+        px: { xs: 2, md: 4 },
+        py: 3,
+        minHeight: "100vh",
+      }}
+    >
+      {/* 🔍 SEARCH */} <Stack direction="row" justifyContent="flex-end" mb={2}>
         {!openSearch && (
-          <IconButton onClick={() => setOpenSearch(true)}>
-            <SearchIcon />
-          </IconButton>
+          <IconButton onClick={() => setOpenSearch(true)}> <SearchIcon /> </IconButton>
         )}
+
 
         <Slide direction="left" in={openSearch} mountOnEnter unmountOnExit>
           <Paper
@@ -122,9 +117,7 @@ export default function ProductPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleSearch();
-                }
+                if (e.key === "Enter") handleSearch();
               }}
               sx={{ ml: 1, flex: 1, width: 200 }}
             />
@@ -133,12 +126,19 @@ export default function ProductPage() {
               <SearchIcon />
             </IconButton>
 
-            <IconButton onClick={() => { setOpenSearch(false); setQuery("") }}>
+            <IconButton
+              onClick={() => {
+                setOpenSearch(false);
+                setQuery("");
+              }}
+            >
               <CloseIcon />
             </IconButton>
           </Paper>
         </Slide>
       </Stack>
+
+      {/* 🧩 CATEGORY FILTER */}
       <Stack
         direction="row"
         spacing={1}
@@ -147,162 +147,153 @@ export default function ProductPage() {
         justifyContent="center"
         sx={{ overflowX: "auto" }}
       >
+        {categories.map((cat) => (
+         <Chip
+  key={cat.id}
+  label={cat.name}
+  clickable
+  sx={{
+    background: selectedChip.includes(cat.id)
+      ? "rgb(80,80,80)"        // darker selected
+      : "rgb(210,210,210)",    // lighter unselected
+    color: selectedChip.includes(cat.id) ? "white" : "black",
 
-        {(categories ?? []).map((cat) => (
-          <Chip sx={{
-            background: selectedChip.includes(cat.id) ? "rgb(100, 100,100)" : "rgb(199, 199,199)",
-            color: "white"
-          }} key={cat.id} onClick={() => {
+    transition: "0.2s",
 
-            selectedChip.includes(cat.id) ? setSelectedChip(selectedChip.filter(id => id !== cat.id)) : setSelectedChip(Array.from(new Set([...selectedChip, ...[cat.id]])))
-          }} label={cat.name} clickable />
-
+    "&:hover": {
+      background: selectedChip.includes(cat.id)
+        ? "rgb(60,60,60)"      // darker hover for selected
+        : "rgb(170,170,170)",  // noticeable hover for unselected
+    },
+  }}
+  onClick={() => {
+    selectedChip.includes(cat.id)
+      ? setSelectedChip(selectedChip.filter((id) => id !== cat.id))
+      : setSelectedChip([...new Set([...selectedChip, cat.id])]);
+  }}
+/>
         ))}
       </Stack>
 
-
-      {/* FILTER BAR */}
-
-      {/* PRODUCT GRID */}
-      <Grid container spacing={3}  >
+      {/* 🧱 GRID */}
+      <Grid container spacing={{ xs: 2, md: 3 }}>
         {filteredProducts.map((product) => {
           let swiperInstance = null;
+
           const price = Number(product.cost_price || 0);
           const original = Number(product.cost_price_before_discount || 0);
-          const discount = Math.round(
-            ((price - original) / price) * 100
-          );
-
-
+          const discount = Math.round(((price - original) / price) * 100);
 
           return (
-            <Grid item xs={12} md={4} sx={{ maxWidth: { md: "30.33%" } }} key={product.id}>              <Card
-              sx={{
-                height: "100%",
-                transition: "0.3s",
-                "&:hover": { boxShadow: 6 },
-                cursor: "pointer"
-              }}
-
+            <Grid
+              size={{ xs: 12, md: 4, lg: 3 }}
+              key={product.id}
+              sx={{ display: "flex" }}
             >
-              <Box
+              <Card
                 sx={{
                   width: "100%",
-                  aspectRatio: "1 / 1",
-                  overflow: "hidden",
+                  height: 440,
+                  display: "flex",
+                  flexDirection: "column",
+                  transition: "0.3s",
+                  "&:hover": { boxShadow: 6 },
+                  cursor: "pointer",
                 }}
-                onMouseEnter={() => swiperInstance?.autoplay.start()}
-                onMouseLeave={() => swiperInstance?.autoplay.stop()}
               >
-                <Swiper
-                  modules={[Autoplay, Pagination]}
-                  autoplay={{
-                    delay: 1500,
-                    disableOnInteraction: false,
-                  }}
-                  onSwiper={(swiper) => {
-                    swiperInstance = swiper;
-                    swiper.autoplay.stop(); // stop initially
-                  }}
-                  loop={true}
-                  style={{ height: "100%", width: "100%" }}
-                >
-                  {product.product_images.map((img) => (
-                    <SwiperSlide key={img.id} onClick={() => navigate(`/product/${product.id}`)}>
-                      <Box
-                        component="img"
-                        src={BASE_URL + img.url}
-
-                        alt={product.name}
-                        sx={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover", // 🔥 important
-                        }}
-                      />
-                    </SwiperSlide>
-                  ))}
-                </Swiper>
-              </Box>
-
-              {/* 📦 CONTENT */}
-              <CardContent>
+                {/* 🖼 IMAGE */}
                 <Box
-                  display="flex"
-                  justifyContent="space-between"
-                  alignItems="flex-start"
+                  sx={{
+                    width: "100%",
+                    aspectRatio: "1 / 1",
+                    overflow: "hidden",
+                  }}
+                  onMouseEnter={() => swiperInstance?.autoplay.start()}
+                  onMouseLeave={() => swiperInstance?.autoplay.stop()}
                 >
-                  {/* LEFT (TITLE) */}
-                  <Box sx={{ width: "70%", pr: 1 }}>
-                    <Typography
-                      variant="subtitle1"
-                      fontWeight={500}
-                      sx={{
-                        fontSize: 14,
-                        lineHeight: 1.3,
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                      }}
-                    >
-                      {product.name}
-                    </Typography>
-                    <Typography
-                      variant="subtitle1"
-                      fontWeight={500}
-                      sx={{
-                        fontSize: 10,
-                        lineHeight: 1.3,
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                      }}
-                    >
-                      {product.description}
-                    </Typography>
-                  </Box>
-
-                  {/* RIGHT (PRICE) */}
-                  <Box
-                    sx={{
-                      width: "30%",
-                      textAlign: "right",
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 0.5,
+                  <Swiper
+                    modules={[Autoplay, Pagination]}
+                    autoplay={{
+                      delay: 1500,
+                      disableOnInteraction: false,
                     }}
+                    onSwiper={(swiper) => {
+                      swiperInstance = swiper;
+                      swiper.autoplay.stop();
+                    }}
+                    loop
+                    style={{ height: "100%", width: "100%" }}
                   >
-                    <Typography fontSize={13}>
-                      ₹{price.toLocaleString()}
-                    </Typography>
-
-                    {product.cost_price_before_discount && (
-                      <Typography
-                        fontSize={11}
-                        color="text.secondary"
-                        sx={{ textDecoration: "line-through" }}
+                    {product.product_images.map((img) => (
+                      <SwiperSlide
+                        key={img.id}
+                        onClick={() => navigate(`/product/${product.id}`)}
                       >
-                        ₹{Number(product.cost_price_before_discount).toLocaleString()}
-                      </Typography>)}
-
-                    {product.cost_price_before_discount && (
-                      <Typography
-                        color="error"
-                        fontWeight={500}
-                        fontSize={12}
-                      >
-                        {discount}% off
-                      </Typography>)}
-                  </Box>
+                        <Box
+                          component="img"
+                          src={BASE_URL + img.url}
+                          alt={product.name}
+                          sx={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
+                        />
+                      </SwiperSlide>
+                    ))}
+                  </Swiper>
                 </Box>
-              </CardContent>
-            </Card>
+
+                {/* 📦 CONTENT */}
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Box display="flex" justifyContent="space-between">
+                    <Box sx={{ width: "70%", pr: 1 }}>
+                      <Typography
+                        fontSize={14}
+                        sx={{
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
+                        }}
+                      >
+                        {product.name}
+                      </Typography>
+
+                      <Typography fontSize={10}>
+                        {product.description}
+                      </Typography>
+                    </Box>
+
+                    <Box textAlign="right">
+                      <Typography fontSize={13}>
+                        ₹{price.toLocaleString()}
+                      </Typography>
+
+                      {product.cost_price_before_discount && (
+                        <>
+                          <Typography
+                            fontSize={11}
+                            sx={{ textDecoration: "line-through" }}
+                          >
+                            ₹{original.toLocaleString()}
+                          </Typography>
+
+                          <Typography color="error" fontSize={12}>
+                            {discount}% off
+                          </Typography>
+                        </>
+                      )}
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
             </Grid>
           );
         })}
       </Grid>
     </Box>
+
+
   );
 }
