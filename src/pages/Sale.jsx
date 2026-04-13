@@ -29,6 +29,7 @@ const Sale = () => {
     const [warehouse, setWarehouse] = useState(null);
     const [warehouses, setWarehouses] = useState(null);
     const [quantity, setQuantity] = useState(1);
+    const [maxQuantity, setMaxQuantity] = useState(null);
     const [discount, setDiscount] = useState(0);
     const [price, setPrice] = useState(0);
     const [products, setProducts] = useState([]);
@@ -54,7 +55,7 @@ const Sale = () => {
 
         setProducts(prev => [...prev, {
             id: product.id,
-            warehouse:product.warehouse,
+            warehouse: product.warehouse,
             name: product.name,
             price,
             quantity,
@@ -99,8 +100,8 @@ const Sale = () => {
 
         setLoadingProduct(true);
         try {
-            const res = await api.get("/api/products", {
-                params: { search: query, warehouse:warehouse },
+            const res = await api.get("/api/sale-products", {
+                params: { search: query, warehouse: warehouse },
             });
             setOptionsProduct(res.data || []);
         } catch (err) {
@@ -120,25 +121,25 @@ const Sale = () => {
     );
 
     const submitSales = () => {
-        api.post("api/sale",{
-            customer_id:customer.id,
-            products:products,
+        api.post("api/sale", {
+            customer_id: customer.id,
+            products: products,
             paymentMode,
             paidAmount
         }).then(res => {
-       dispatch(showSnackbar({ message: "New Sales Created", severity: "success" }));
-        setCustomer(null);
+            dispatch(showSnackbar({ message: "New Sales Created", severity: "success" }));
+            setCustomer(null);
             setProducts([]);
             setPaymentMode("cash");
             setPaidAmount(0);
             setPaymentModal(false);
         })
-        .catch(err => {
-            console.error("Sale creation failed:", err);
-            dispatch(showSnackbar({ message: "Sale creation failed", severity: "error" }))
+            .catch(err => {
+                console.error("Sale creation failed:", err);
+                dispatch(showSnackbar({ message: "Sale creation failed", severity: "error" }))
 
 
-        })
+            })
     }
 
     useEffect(() => {
@@ -156,9 +157,9 @@ const Sale = () => {
             setWarehouses(res.data);
         });
     }, [])
-    useEffect(()=>{
+    useEffect(() => {
         setProduct(null)
-    },[warehouse])
+    }, [warehouse])
 
     return (<Box sx={{
         display: 'grid',
@@ -176,26 +177,23 @@ const Sale = () => {
                         submitSales()
                     }} id="payment-form">
                         <TextField
-                            autoFocus
-                            required
                             margin="dense"
-                            id="name"
-                            name="email"
+                            id="total-amount"
+                            name="totalAmount"
                             label="Total Amount"
                             fullWidth
                             size="small"
                             variant="outlined"
-                            onChange={() => { }}
+                            InputProps={{ readOnly: true }}
                             value={products.reduce((acc, prod) => {
                                 return acc + prod.price * prod.quantity - prod.discount
                             }, 0)}
                         />
                         <TextField
-                            autoFocus
                             required
                             margin="dense"
-                            id="name"
-                            name="email"
+                            id="paid-amount"
+                            name="paidAmount"
                             label="Paid Amount"
                             fullWidth
                             size="small"
@@ -220,7 +218,13 @@ const Sale = () => {
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setPaymentModal(false)}>Cancel</Button>
-                    <Button type="submit" form="payment-form">
+                    <Button disabled={
+                        // !customer?.id ||
+                        // !products.length ||
+                        // !paymentMode
+                        false
+
+                    } type="submit" form="payment-form">
                         Pay
                     </Button>
                 </DialogActions>
@@ -275,7 +279,7 @@ const Sale = () => {
                                 gap: 2,
                             }}
                                 onSubmit={e => {
-                                e.preventDefault()
+                                    e.preventDefault()
                                     dispatch(setBusy(true))
                                     api.post("/api/customer", newCustomerForm).then(res => {
                                         setCustomer(res.data)
@@ -300,7 +304,7 @@ const Sale = () => {
                                         setNewCustomerForm({ ...newCustomerForm, name: e.target.value })
                                         setCustomerErrors(prev => ({ ...prev, name: null }))
                                     }}
-                                    errors={customerErrors.name ? customerErrors.name[0] : ""}
+                                    error={!!customerErrors.name?.length}
                                     helperText={customerErrors.name ? customerErrors.name[0] : ""}
 
                                 />
@@ -320,7 +324,6 @@ const Sale = () => {
                                 />
                                 <TextField
                                     size="small"
-                                    required
                                     fullWidth
                                     type="email"
                                     label="Email"
@@ -329,16 +332,16 @@ const Sale = () => {
                                         setNewCustomerForm({ ...newCustomerForm, email: e.target.value })
                                         setCustomerErrors(prev => ({ ...prev, email: null }))
                                     }}
-                                    error={customerErrors.email ? customerErrors.email[0] : ""}
+                                    error={!!customerErrors.email?.length}
                                     helperText={customerErrors.email ? customerErrors.email[0] : ""}
                                 />
 
-                                  <TextField
+                                <TextField
                                     size="small"
                                     sx={{
-                                        gridColumnStart:"1",
-                                        gridColumn:"span 2"
-                                     }}
+                                        gridColumnStart: "1",
+                                        gridColumn: "span 2"
+                                    }}
                                     required
                                     fullWidth
                                     label="Address"
@@ -355,8 +358,8 @@ const Sale = () => {
                                 />
 
                                 <Button type="submit" sx={{
-                                    gridColumnStart:"1"
-                                 }} variant="outlined"
+                                    gridColumnStart: "1"
+                                }} variant="outlined"
                                 >
                                     Add Customer
                                 </Button>
@@ -469,9 +472,16 @@ const Sale = () => {
                         loading={loadingProduct}
                         filterOptions={(x) => x}
                         getOptionLabel={(option) =>
-                            `${option.name} ${option.quantity}/${option.unit}`
+                            `${option.product.name} ${option.quantity}/${option.product.unit}`
                         }
-                        onChange={(e, newValue) => setProduct(newValue)}
+                        onChange={(e, newValue) => {
+                            setProduct(newValue);
+                            const available = newValue?.quantity ?? null;
+                            setMaxQuantity(available);
+                            if (available !== null && quantity > available) {
+                                setQuantity(available);
+                            }
+                        }}
                         inputValue={inputValueProduct}
                         onInputChange={(e, newInput) => setInputValueProduct(newInput)}
                         noOptionsText={
@@ -561,9 +571,14 @@ const Sale = () => {
                                 setQuantity(0)
                         }}
                         value={quantity}
-                        onChange={(e) => setQuantity(Number(e.target.value) || 0)}
+                        onChange={(e) => {
+                            const v = Number(e.target.value) || 0;
+                            const capped = maxQuantity !== null ? Math.min(v, maxQuantity) : v;
+                            setQuantity(capped);
+                        }}
                         inputProps={{
                             min: 0,
+                            max: maxQuantity ?? undefined,
                             style: {
                                 textAlign: "center", MozAppearance: "textfield", // Firefox
                             }
@@ -591,7 +606,10 @@ const Sale = () => {
                             ),
                             endAdornment: (
                                 <InputAdornment position="end">
-                                    <IconButton size="small" onClick={() => setQuantity(prev => Math.max(0, prev + 1))}>
+                                    <IconButton size="small" onClick={() => setQuantity(prev => {
+                                        const next = prev + 1;
+                                        return maxQuantity !== null ? Math.min(maxQuantity, next) : next;
+                                    })}>
                                         <AddCircleOutlineOutlined />
                                     </IconButton>
                                 </InputAdornment>
@@ -656,6 +674,10 @@ const Sale = () => {
                 }}>
                     <Typography variant="h6">
                         Product Lists
+
+                        {
+                            JSON.stringify(products)
+                        }
 
                     </Typography>
                     <DataTableProduct rows={products} setRows={setProducts} warehouses={warehouses}></DataTableProduct>

@@ -14,7 +14,7 @@ const DataTableProduct = ({
             headerName: "Name",
             width: 150,
             editable: false,
-            valueGetter: (_, row) => row?.product?.name ?? "N/A",
+            valueGetter: (_, row) => row?.product?.name ?? row?.product?.product?.name ?? row.product_warehouse?.product?.name ?? "N/A",
         },
 
         {
@@ -22,7 +22,7 @@ const DataTableProduct = ({
             headerName: "Warehouse",
             width: 150,
             editable: false,
-            valueGetter: (_, row) => row?.product?.warehouse?.name ?? "N/A",
+            valueGetter: (_, row) => row?.product?.warehouse?.name ?? row.warehouse?.name ?? row.product_warehouse?.warehouse?.name ?? "N/A",
         },
 
         {
@@ -89,7 +89,7 @@ const DataTableProduct = ({
             processRowUpdate={processRowUpdate}
 
             pageSizeOptions={[5]}
-            checkboxSelection
+
             disableRowSelectionOnClick
         />
     </div>

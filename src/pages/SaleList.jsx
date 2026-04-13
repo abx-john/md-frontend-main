@@ -278,7 +278,7 @@ export default function SaleList() {
                     },
                   }}
                   pageSizeOptions={[5]}
-                  checkboxSelection
+                  
                   disableRowSelectionOnClick
                 />
               </Box>

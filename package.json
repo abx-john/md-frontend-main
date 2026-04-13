@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "watch": "npx @tailwindcss/cli -i ./src/input.css -o ./src/index.css --watch",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -16,6 +17,8 @@
     "@mui/material": "^7.3.6",
     "@mui/x-data-grid": "^8.21.0",
     "@reduxjs/toolkit": "^2.11.1",
+    "@tailwindcss/cli": "^4.2.2",
+    "animejs": "^4.3.6",
     "axios": "^1.13.2",
     "date-fns": "^4.1.0",
     "lodash.debounce": "^4.0.8",
@@ -38,7 +41,7 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
     "rollup-plugin-visualizer": "^6.0.5",
-    "tailwindcss": "^4.0.0",
+    "tailwindcss": "^4.2.2",
     "vite": "^8.0.1"
   }
 }

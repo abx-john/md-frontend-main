@@ -15,6 +15,7 @@ import { showSnackbar } from "../store/snackbarSlice";
 import { Autocomplete, createFilterOptions } from "@mui/material";
 import ImageUpload from "../components/ImageUpload";
 import { useNavigate } from "react-router-dom";
+import { DataGrid } from "@mui/x-data-grid";
 
 export default function Product() {
   const dispatch = useDispatch();
@@ -37,7 +38,7 @@ export default function Product() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState("create"); // 'create' | 'view'
-  const [form, setForm] = useState({ name: "", files: [], warehouse_id: null, category_id: null, quantity: "", unit: "", description: "" });
+  const [form, setForm] = useState({ name: "", files: [], warehouse_id: null, category_id: null, quantity: "", unit: "", description: "", product_warehouses: [] });
   const [submitting, setSubmitting] = useState(false);
   const [warehouses, setWarehouses] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -54,14 +55,44 @@ export default function Product() {
 
   const openCreateDialog = () => {
     setDialogMode("create");
-    setForm({ name: "", warehouse_id: null, quantity: "", unit: "", description: "" });
+    setForm({
+      name: "",
+      warehouse_id: null,
+      quantity: "",
+      unit: "",
+      description: "",
+      product_warehouses: warehouses.map(e => ({
+        warehouse_id: e.id, quantity: 0, warehouse: {
+          name: e.name
+        }
+      })),
+    });
     setDialogOpen(true);
   };
 
   const openViewDialog = (row) => {
     setDialogMode("view");
-    setForm(row);
+    setForm({
+      ...row,
+      warehouse_id: row.warehouse?.id || null,
+      category_id: row.category?.id || null,
+
+    });
+
+    const warehouseAvailable = row.product_warehouses.map(e => e.warehouse_id);
+    const missingWarehouses = warehouses.filter(e => !warehouseAvailable.includes(e.id)).map(e => ({
+      warehouse_id: e.id, quantity: 0, warehouse: {
+        name: e.name
+      }
+    }))
+
+    setForm((f) => ({
+      ...f,
+      product_warehouses: [...(f.product_warehouses || []), ...missingWarehouses]
+    }))
+
     setDialogOpen(true);
+
   };
 
   const handleClose = () => {
@@ -70,7 +101,9 @@ export default function Product() {
 
   const handleChange = (key) => (e) => setForm((s) => ({ ...s, [key]: e.target.value }));
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
     setSubmitting(true);
     try {
 
@@ -136,7 +169,7 @@ export default function Product() {
             finalSelectionId, selectedProductId
           )
 
-          api.post("/api/landing/show", { product_ids: finalSelectionId,not_product_ids: finalUnselectionId })
+          api.post("/api/landing/show", { product_ids: finalSelectionId, not_product_ids: finalUnselectionId })
             .then(res => {
               dispatch(showSnackbar({
                 message: res.data?.message || "Products shown in landing successfully",
@@ -178,6 +211,7 @@ export default function Product() {
         setRowSelectionModel={setSelectedProductId}
         serverSideInclude={"show_in_landing"}
         setRowsCallback={setProducts}
+        selectable={true}
       />
 
       <Dialog open={dialogOpen} onClose={handleClose} fullWidth maxWidth="sm">
@@ -186,51 +220,7 @@ export default function Product() {
           <DialogContent>
             <Stack spacing={2} sx={{ mt: 1 }}>
               <TextField label="Name" required size="small" value={form.name} onChange={handleChange("name")} fullWidth />
-              <Autocomplete
-                required
-                size="small"
-                // Provide the object that matches the stored id, or null
-                value={warehouses.find(w => w.id === form.warehouse_id) || null}
-                onChange={(event, newValue) => {
-                  if (typeof newValue === 'string') {
-                    setForm({ ...form, warehouse_id: null, warehouse_label: newValue });
-                  } else if (newValue && newValue.inputValue) {
-                    setForm({ ...form, warehouse_id: null, warehouse_label: newValue.inputValue });
-                  } else if (newValue) {
-                    setForm({ ...form, warehouse_id: newValue.id });
-                  } else {
-                    setForm({ ...form, warehouse_id: null });
-                  }
-                }}
-                filterOptions={(options, params) => {
-                  const filtered = filter(options, params);
-                  return filtered;
-                }}
-                selectOnFocus
-                clearOnBlur
-                handleHomeEndKeys
-                id="warehouse-autocomplete"
-                options={warehouses}
-                getOptionLabel={(option) => {
-                  if (typeof option === 'string') {
-                    return option;
-                  }
-                  if (option.inputValue) {
-                    return option.inputValue;
-                  }
-                  return option.name || '';
-                }}
-                renderOption={(props, option) => {
-                  return (
-                    <li {...props}>
-                      {option.name ?? option.inputValue ?? option}
-                    </li>
-                  );
-                }}
-                renderInput={(params) => (
-                  <TextField required size="small" {...params} label="Warehouse" />
-                )}
-              />
+
               <Autocomplete
                 size="small"
                 // Provide the object that matches the stored id, or null
@@ -275,11 +265,41 @@ export default function Product() {
                   <TextField required size="small" {...params} label="Category" />
                 )}
               />
-              <TextField required label="Quantity" type="number" size="small" value={form.quantity} onChange={handleChange("quantity")} fullWidth />
+
+              {
+                (form?.product_warehouses || []).map((item) => {
+                  return (
+                    <TextField
+                      key={item.warehouse_id}
+                      required
+                      label={`Quantity in ${item.warehouse?.name}`}
+                      size="small"
+                      value={item.quantity}
+                      onChange={(event) => {
+                        const newQuantity = event.target.value;
+
+                        const updatedWarehouses = form.product_warehouses.map((w) => {
+                          if (w.warehouse_id === item.warehouse_id) {
+                            return { ...w, quantity: newQuantity };
+                          }
+                          return w;
+                        });
+
+                        // assuming you have setForm
+                        setForm({
+                          ...form,
+                          product_warehouses: updatedWarehouses,
+                        });
+                      }}
+                      fullWidth
+                    />
+                  );
+                })
+              }
               <TextField required label="Unit" size="small" value={form.unit} onChange={handleChange("unit")} fullWidth />
               <TextField required label="Cost Price" size="small" value={form.cost_price} onChange={handleChange("cost_price")} fullWidth />
               <TextField required label="Cost Price Before Discount" size="small" value={form.cost_price_before_discount} onChange={handleChange("cost_price_before_discount")} fullWidth />
-              <TextField label="Description" required multiline rows={4} size="small" value={form.description} onChange={handleChange("description")} fullWidth />
+              <TextField label="Description" multiline rows={4} size="small" value={form.description} onChange={handleChange("description")} fullWidth />
               <ImageUpload form={form} setForm={setForm}></ImageUpload>
               <div>
                 <Button variant="contained" onClick={() => navigateToHistory()}>History</Button>
@@ -290,15 +310,12 @@ export default function Product() {
             <Button onClick={handleClose} disabled={submitting}>
               Cancel
             </Button>
-            <Button onClick={handleSubmit} disabled={submitting}>
-              Submit
-            </Button>
             <Button
               type="submit"
               variant="contained"
-              disabled={submitting || dialogMode === "view"}
+              disabled={submitting}
             >
-              {submitting ? "Saving..." : dialogMode === "create" ? "Create" : "Close"}
+              {submitting ? "Saving..." : dialogMode === "create" ? "Create" : "Edit"}
             </Button>
           </DialogActions>
         </form>

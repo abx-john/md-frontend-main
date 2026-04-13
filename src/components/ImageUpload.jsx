@@ -10,9 +10,9 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import { api, url as baseUrl } from "../axios";
 
-export default function ImageUpload({ form, setForm }) {
+export default function ImageUpload({ form, setForm, type="product_images", apiEndpoint="/api/product-images" }) {
   const inputRef = useRef(null);
-  const [files, setFiles] = useState(form.product_images || []);
+  const [files, setFiles] = useState(form[type] || []);
 
   const generateId = () =>
     Date.now().toString() + Math.random().toString(36).substring(2, 9);
@@ -52,7 +52,7 @@ export default function ImageUpload({ form, setForm }) {
     }
 
     else {
-      api.delete(`/api/productImage/${id}`).then(() => {
+      api.delete(`${apiEndpoint}/${id}`).then(() => {
         const updated = files.filter((f) => f.id !== id);
 
         setFiles(updated);

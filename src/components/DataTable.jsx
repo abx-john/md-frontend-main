@@ -36,7 +36,9 @@ export default function DataTable({
   rowSelectionModel,
   setRowSelectionModel,
   serverSideInclude,
-  setRowsCallback
+  setRowsCallback,
+  selectable = false,
+  queryParams = {},
 }) {
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -111,7 +113,7 @@ export default function DataTable({
         if (customerId) {
           params['customer_id'] = customerId;
         }
-        const res = await api.get(`/api/${tableName}`, { params });
+        const res = await api.get(`/api/${tableName}`, { params: { ...params, ...queryParams } });
         const data = res.data || {};
 
 
@@ -244,6 +246,54 @@ export default function DataTable({
     }, FILTER_DEBOUNCE);
   };
 
+  const handleRowClick = (params) => {
+    if (!selectable || !setRowSelectionModel) return;
+    const id = params.id ?? params.row?.id;
+    if (id === undefined || id === null) return;
+
+    // Array model
+    if (Array.isArray(rowSelectionModel)) {
+      const exists = rowSelectionModel.includes(id);
+      const next = exists ? rowSelectionModel.filter((x) => x !== id) : [...rowSelectionModel, id];
+      setRowSelectionModel(next);
+      return;
+    }
+
+    // Object model with Set in `ids` (server-side include case)
+    if (rowSelectionModel && typeof rowSelectionModel === "object") {
+      // toggle Set-based ids
+      if (rowSelectionModel.ids instanceof Set) {
+        const ids = new Set(rowSelectionModel.ids);
+        if (ids.has(id)) ids.delete(id); else ids.add(id);
+        setRowSelectionModel({ ...rowSelectionModel, ids });
+        return;
+      }
+
+      // fallback: object with array in `ids` or `selected`
+      const arr = Array.isArray(rowSelectionModel.ids)
+        ? [...rowSelectionModel.ids]
+        : Array.isArray(rowSelectionModel.selected)
+        ? [...rowSelectionModel.selected]
+        : null;
+      if (arr) {
+        const exists = arr.includes(id);
+        const next = exists ? arr.filter((x) => x !== id) : [...arr, id];
+        // prefer the `ids` key if present
+        if (Array.isArray(rowSelectionModel.ids)) {
+          setRowSelectionModel({ ...rowSelectionModel, ids: next });
+        } else if (Array.isArray(rowSelectionModel.selected)) {
+          setRowSelectionModel({ ...rowSelectionModel, selected: next });
+        } else {
+          setRowSelectionModel(next);
+        }
+        return;
+      }
+    }
+
+    // No existing model: create array model with this id
+    setRowSelectionModel([id]);
+  };
+
   const saveColumnSettings = useCallback(
     (cols) => {
       try {
@@ -299,9 +349,10 @@ export default function DataTable({
 
         rowSelectionModel={rowSelectionModel}
         onRowSelectionModelChange={(newSelection) => {
-
-          setRowSelectionModel({ ...newSelection });
+          if (!selectable || !setRowSelectionModel) return;
+          setRowSelectionModel(newSelection);
         }}
+
         rows={rows}
         columns={dgColumns}
         pagination
@@ -331,8 +382,8 @@ export default function DataTable({
         filterMode="server"
         filterModel={filterModel}
         onFilterModelChange={handleFilterModelChange}
-        checkboxSelection={!!rowSelectionModel && !!setRowSelectionModel}
-        disableRowSelectionOnClick={!setRowSelectionModel && !rowSelectionModel}
+        checkboxSelection={selectable && !!rowSelectionModel && !!setRowSelectionModel}
+        disableRowSelectionOnClick
         loading={loading}
         onColumnVisibilityModelChange={(model) => {
           const newCols = columns.map((c) => {
@@ -360,6 +411,7 @@ export default function DataTable({
             </Box>
           ),
         }}
+
       />
     </Box>
   );

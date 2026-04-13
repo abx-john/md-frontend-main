@@ -13,6 +13,7 @@ import { useDispatch } from "react-redux";
 import { setBusy, stopBusy } from "../store/busySlice";
 import { showSnackbar } from "../store/snackbarSlice";
 import { Autocomplete, createFilterOptions } from "@mui/material";
+import ImageUpload from "../components/ImageUpload";
 
 export default function Category() {
   const dispatch = useDispatch();
@@ -31,20 +32,20 @@ export default function Category() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState("create"); // 'create' | 'view'
-  const [form, setForm] = useState({ name: "", });
+  const [form, setForm] = useState({ name: "", files: [] });
   const [submitting, setSubmitting] = useState(false);
   const [warehouses, setWarehouses] = useState([]);
 
 
   const openCreateDialog = () => {
     setDialogMode("create");
-    setForm({ name: "", warehouse_id: null, quantity: "", unit: "", description: "" });
+    setForm({ name: "", warehouse_id: null, quantity: "", unit: "", description: "", files: [] });
     setDialogOpen(true);
   };
 
   const openViewDialog = (row) => {
     setDialogMode("view");
-    setForm(row);
+    setForm({ ...row, files: row.files || row.images || [] });
     setDialogOpen(true);
   };
 
@@ -57,7 +58,15 @@ export default function Category() {
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      const res = await api.post("/api/category", form);
+      const res = await api.post(
+        "/api/category",
+        { ...form, images: (form.files || []).map((e) => e.file) },
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
       setRefreshKey((k) => k + 1);
       setDialogOpen(false);
@@ -106,6 +115,8 @@ export default function Category() {
           <Stack spacing={2} sx={{ mt: 1 }}>
             <TextField label="Name" size="small" value={form.name} onChange={handleChange("name")} fullWidth />
 
+              <ImageUpload form={form} setForm={setForm} type="images" apiEndpoint="/api/categoryImages" />
+
 
           </Stack>
         </DialogContent>
@@ -118,9 +129,9 @@ export default function Category() {
           <Button
             onClick={handleSubmit}
             variant="contained"
-            disabled={submitting || dialogMode === "view"}
+
           >
-            {submitting ? "Saving..." : dialogMode === "create" ? "Create" : "Close"}
+            {submitting ? "Saving..." : dialogMode === "create" ? "Create" : "Edit"}
           </Button>
         </DialogActions>
       </Dialog>

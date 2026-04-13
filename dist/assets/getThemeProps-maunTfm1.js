@@ -1,0 +1,1 @@
+import{B as e,z as t}from"./Typography-CMpnuOex.js";var n=e();function r(e){let{theme:n,name:r,props:i}=e;return!n||!n.components||!n.components[r]||!n.components[r].defaultProps?i:t(n.components[r].defaultProps,i)}export{n,r as t};

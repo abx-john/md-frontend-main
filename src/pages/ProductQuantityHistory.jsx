@@ -13,14 +13,14 @@ import { useNavigate, useParams } from "react-router-dom";
 const DataTable = lazy(() => import("../components/DataTable"));
 
 
-export default function Customer() {
+export default function ProductQuantityHistory() {
   const params = useParams()
   console.log(params)
   const navigate = useNavigate();
   const columns = useMemo(
     () => [
       { field: "id", headerName: "ID", width: 80,filterable: false,sortable: false },
-      { field: "product", headerName: "Product",valueGetter: (row) => row?.name || "Unknown", width: 200 ,filterable:false,sortable: false},
+      { field: "product_warehouse", headerName: "Warehouse",valueGetter: (row) => row?.warehouse?.name || "Unknown", width: 200 ,filterable:false,sortable: false},
       { field: "quantity", headerName: "Quantity", width: 200 ,filterable:false,sortable: false},
       { field: "user", headerName: "User",valueGetter: (row) => row?.name || "Unknown", width: 200 ,filterable:false,sortable: false},
 
@@ -103,6 +103,7 @@ export default function Customer() {
           pageSizeOptions={[10, 25, 50]}
           onViewRow={(row) => openViewDialog(row)}
           refreshKey={refreshKey}
+          queryParams={{ product_id: params.id }}
         />
       </Suspense>
 
@@ -111,8 +112,7 @@ export default function Customer() {
 
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
-            <FormTextField readOnly name="product.name" label="Name" form={form} errors={errors} handleChange={handleChange} />
-
+            <FormTextField readOnly name="product_warehouse.product.name" label="Name" form={form} errors={errors} handleChange={handleChange} />
             <FormTextField name="quantity" readOnly label="Quantity" type="number" form={form} errors={errors} handleChange={handleChange} />
             <FormTextField name="user.name" label="User"  form={form} errors={errors} handleChange={handleChange} />
 
