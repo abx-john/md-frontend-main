@@ -66,6 +66,10 @@ export default function DataTable({
     return { items: [] };
   });
 
+  useEffect(() => {
+  setColumns(initialColumns);
+}, [initialColumns]);
+
   const [columns, setColumns] = useState(() => {
     try {
       const saved = localStorage.getItem(storageKey(tableName));

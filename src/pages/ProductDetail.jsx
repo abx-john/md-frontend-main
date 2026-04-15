@@ -22,7 +22,7 @@ const ProductPage = () => {
 
   const [product, setProduct] = React.useState(null)
 
-  console.log(param.id)
+  console.log(params)
 
   const fetchProduct = () => {
     api.get(`api/productList/${param.id}`).then((res) => {

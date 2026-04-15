@@ -23,12 +23,16 @@ import { Autoplay, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 const BASE_URL = `${url}/storage/`;
 
 export default function ProductPage() {
   const navigate = useNavigate();
+
+
+  const params = useParams()
+  console.log(params.id)
 
   const [products, setProducts] = useState([]);
   const [selectedChip, setSelectedChip] = useState([]);
@@ -41,7 +45,7 @@ export default function ProductPage() {
   };
 
   const getProduct = () => {
-    api.get("api/productList").then((res) => {
+    api.get(`api/categoryList/${params.id}`).then((res) => {
       setProducts(res.data || []);
       setCategories(
         Array.from(

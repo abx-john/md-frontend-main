@@ -16,23 +16,44 @@ import { Autocomplete, createFilterOptions } from "@mui/material";
 import ImageUpload from "../components/ImageUpload";
 import { useNavigate } from "react-router-dom";
 import { DataGrid } from "@mui/x-data-grid";
+import { getRowValue } from "@mui/x-data-grid/internals";
 
 export default function Product() {
   const dispatch = useDispatch();
   const filter = createFilterOptions();
+  const [warehouses, setWarehouses] = useState([]);
 
-  const columns = useMemo(
-    () => [
+  const columns = useMemo(() => {
+    const baseColumns = [
       { field: "id", headerName: "ID", width: 80 },
       { field: "name", headerName: "Name", width: 200 },
-      { field: "warehouse_name", headerName: "Warehouse", width: 200 },
       { field: "category_name", headerName: "Category", width: 200 },
-      { field: "quantity", headerName: "Quantity", width: 200 },
-      { field: "unit", headerName: "Unit", width: 200 },
+      { field: "unit", headerName: "Unit", width: 150 },
       { field: "description", headerName: "Description", width: 200 },
-    ],
-    []
-  );
+    ];
+
+    const warehouseColumns = warehouses.map((w) => ({
+      field: `${w.id}`,
+      headerName: w.name,
+      width: 120,
+      sortable:false,
+      filterable:false,
+      valueGetter: (value, row) => {
+
+        return ((row.product_warehouses.find(e => e.warehouse_id === w.id)?.quantity) || "0");
+    },
+    }));
+
+    const quantity = {
+      field: "quantity",
+      headerName: "Total Quantity",
+      width: 150,
+    }
+
+    return [...baseColumns, ...warehouseColumns, ...[quantity]];
+  }, [warehouses]);
+
+  console.log(columns)
 
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -40,7 +61,6 @@ export default function Product() {
   const [dialogMode, setDialogMode] = useState("create"); // 'create' | 'view'
   const [form, setForm] = useState({ name: "", files: [], warehouse_id: null, category_id: null, quantity: "", unit: "", description: "", product_warehouses: [] });
   const [submitting, setSubmitting] = useState(false);
-  const [warehouses, setWarehouses] = useState([]);
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
 
@@ -298,7 +318,7 @@ export default function Product() {
               }
               <TextField required label="Unit" size="small" value={form.unit} onChange={handleChange("unit")} fullWidth />
               <TextField required label="Cost Price" size="small" value={form.cost_price} onChange={handleChange("cost_price")} fullWidth />
-              <TextField required label="Cost Price Before Discount" size="small" value={form.cost_price_before_discount} onChange={handleChange("cost_price_before_discount")} fullWidth />
+              <TextField label="Cost Price Before Discount" size="small" value={form.cost_price_before_discount} onChange={handleChange("cost_price_before_discount")} fullWidth />
               <TextField label="Description" multiline rows={4} size="small" value={form.description} onChange={handleChange("description")} fullWidth />
               <ImageUpload form={form} setForm={setForm}></ImageUpload>
               <div>

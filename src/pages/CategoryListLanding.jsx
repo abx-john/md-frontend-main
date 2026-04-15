@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api, url } from '../axios';
+import { useNavigate } from 'react-router-dom';
 
 export default function CategoriesLayout() {
   const [categories, setCategories] = useState([]);
@@ -66,10 +67,12 @@ export default function CategoriesLayout() {
 function Card({ cat }) {
   const img = cat.images?.[0]?.url;
   const src = `${url}/storage/${img}`;
-
+  const navigate = useNavigate();
 
   return (
-    <div className="border rounded-md p-2 flex flex-col items-center justify-center shadow hover:shadow-md transition">
+    <div onClick={() => {
+      navigate(`/category/${cat.id}`);
+    }} className="border rounded-md cursor-pointer p-2 flex flex-col items-center justify-center shadow hover:shadow-md transition">
       {src && (
         <img
           src={src}
