@@ -8,9 +8,9 @@ import DialogActions from "@mui/material/DialogActions";
 import TextField from "@mui/material/TextField";
 import Stack from "@mui/material/Stack";
 import { api } from "../axios";
-import { fetchWarehouses, fetchCategories } from "../axios/function";
-import { useDispatch } from "react-redux";
-import { setBusy, stopBusy } from "../store/busySlice";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchCategories, selectCategories, selectCategoryNames } from "../store/categorySlice";
+import { fetchWarehouses, selectWarehouses } from "../store/warehouseSlice";
 import { showSnackbar } from "../store/snackbarSlice";
 import { Autocomplete, createFilterOptions } from "@mui/material";
 import ImageUpload from "../components/ImageUpload";
@@ -21,13 +21,21 @@ import { getRowValue } from "@mui/x-data-grid/internals";
 export default function Product() {
   const dispatch = useDispatch();
   const filter = createFilterOptions();
-  const [warehouses, setWarehouses] = useState([]);
+  const warehouses = useSelector(selectWarehouses);
+  const categories = useSelector(selectCategories);
+  const categoryNames = useSelector(selectCategoryNames);
 
   const columns = useMemo(() => {
     const baseColumns = [
       { field: "id", headerName: "ID", width: 80 },
       { field: "name", headerName: "Name", width: 200 },
-      { field: "category_name", headerName: "Category", width: 200 },
+      {
+        field: "category_name",
+        headerName: "Category",
+        width: 200,
+        type: "singleSelect",
+        valueOptions: categoryNames,
+      },
       { field: "unit", headerName: "Unit", width: 150 },
       { field: "description", headerName: "Description", width: 200 },
     ];
@@ -51,7 +59,7 @@ export default function Product() {
     }
 
     return [...baseColumns, ...warehouseColumns, ...[quantity]];
-  }, [warehouses]);
+  }, [warehouses, categoryNames]);
 
   console.log(columns)
 
@@ -61,7 +69,6 @@ export default function Product() {
   const [dialogMode, setDialogMode] = useState("create"); // 'create' | 'view'
   const [form, setForm] = useState({ name: "", files: [], warehouse_id: null, category_id: null, quantity: "", unit: "", description: "", product_warehouses: [] });
   const [submitting, setSubmitting] = useState(false);
-  const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
 
 
@@ -158,18 +165,9 @@ export default function Product() {
 
 
   useEffect(() => {
-    dispatch(setBusy(true));
-    fetchCategories().then(res => {
-      setCategories(res.data);
-    })
-    fetchWarehouses().then(res => {
-      setWarehouses(res.data);
-    })
-      .catch(() => dispatch(showSnackbar("Failed to fetch warehouses", { variant: "error" })))
-      .finally(() => {
-        dispatch(stopBusy());
-      });
-  }, [])
+    dispatch(fetchCategories());
+    dispatch(fetchWarehouses());
+  }, [dispatch])
 
   return (
     <>

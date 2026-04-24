@@ -3,12 +3,13 @@ import FormTextField from "../components/FormTextField";
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../axios/index";
 import debounce from "lodash.debounce";
-import { fetchWarehouses } from "../axios/function";
 import { AddCircleOutlineOutlined, RemoveCircleOutlineOutlined } from "@mui/icons-material";
 import DataTableProduct from "../components/DataTableProduct";
 import DialogContentText from '@mui/material/DialogContentText';
 import { isMobile } from 'mobile-device-detect';
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchWarehouses, selectWarehouses } from "../store/warehouseSlice";
+import { fetchCategories, selectCategories } from "../store/categorySlice";
 import { setBusy } from "../store/busySlice";
 import { showSnackbar } from "../store/snackbarSlice";
 
@@ -27,7 +28,9 @@ const Sale = () => {
     const [loadingCustomer, setLoadingCustomer] = useState(false);
     const [loadingProduct, setLoadingProduct] = useState(false);
     const [warehouse, setWarehouse] = useState(null);
-    const [warehouses, setWarehouses] = useState(null);
+    const [category, setCategory] = useState(null);
+    const warehouses = useSelector(selectWarehouses);
+    const categories = useSelector(selectCategories);
     const [quantity, setQuantity] = useState(1);
     const [maxQuantity, setMaxQuantity] = useState(null);
     const [discount, setDiscount] = useState(0);
@@ -101,7 +104,7 @@ const Sale = () => {
         setLoadingProduct(true);
         try {
             const res = await api.get("/api/sale-products", {
-                params: { search: query, warehouse: warehouse },
+                params: { search: query, warehouse: warehouse, category: category },
             });
             setOptionsProduct(res.data || []);
         } catch (err) {
@@ -117,7 +120,7 @@ const Sale = () => {
     );
     const debouncedFetchProduct = useMemo(
         () => debounce(fetchProducts, 400),
-        [warehouse]
+        [warehouse, category]
     );
 
     const submitSales = () => {
@@ -153,13 +156,15 @@ const Sale = () => {
     }, [inputValueProduct]);
 
     useEffect(() => {
-        fetchWarehouses().then(res => {
-            setWarehouses(res.data);
-        });
-    }, [])
+        dispatch(fetchWarehouses());
+        dispatch(fetchCategories());
+    }, [dispatch]);
     useEffect(() => {
-        setProduct(null)
-    }, [warehouse])
+        setProduct(null);
+    }, [warehouse]);
+    useEffect(() => {
+        setProduct(null);
+    }, [category]);
 
     return (<Box sx={{
         display: 'grid',
@@ -451,16 +456,32 @@ const Sale = () => {
                             labelId="product-label"
                             size="small"
                             id="product-select"
-                            value={warehouse}
+                            value={warehouse ?? ""}
                             label="Warehouse"
                             onChange={e => {
-                                setWarehouse(e.target.value);
-                                // localStorage.setItem("warehouse", e.target.value);
+                                setWarehouse(e.target.value || null);
                             }}
 
                         >
+                            <MenuItem value="">All Warehouses</MenuItem>
                             {(warehouses || []).map(wh => (
                                 <MenuItem key={wh.id} value={wh.id}>{wh.name}</MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+
+                    <FormControl fullWidth>
+                        <InputLabel id="category-filter-label">Category</InputLabel>
+                        <Select
+                            labelId="category-filter-label"
+                            size="small"
+                            value={category ?? ""}
+                            label="Category"
+                            onChange={e => setCategory(e.target.value || null)}
+                        >
+                            <MenuItem value="">All Categories</MenuItem>
+                            {categories.map(cat => (
+                                <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>
                             ))}
                         </Select>
                     </FormControl>
@@ -675,9 +696,7 @@ const Sale = () => {
                     <Typography variant="h6">
                         Product Lists
 
-                        {
-                            JSON.stringify(products)
-                        }
+                       
 
                     </Typography>
                     <DataTableProduct rows={products} setRows={setProducts} warehouses={warehouses}></DataTableProduct>

@@ -2,16 +2,16 @@
 import { configureStore } from "@reduxjs/toolkit";
 import busyReducer from "./busySlice";
 import snackbarReducer from "./snackbarSlice";
-// import other reducers if you have them, e.g. auth
-// import authReducer from "./authSlice";
+import categoryReducer from "./categorySlice";
+import warehouseReducer from "./warehouseSlice";
 
 const store = configureStore({
   reducer: {
     busy: busyReducer,
     snackbar: snackbarReducer,
-    // auth: authReducer, // uncomment if present
+    category: categoryReducer,
+    warehouse: warehouseReducer,
   },
-  // optional: you can customize middleware here
 });
 
 export default store;

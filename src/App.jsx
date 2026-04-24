@@ -33,6 +33,7 @@ const CategoryListLanding = lazy(() => import("./pages/CategoryListLanding"));
 const ProductQuantityHistory = lazy(() =>
   import("./pages/ProductQuantityHistory")
 );
+const ProductWarehousePage = lazy(() => import("./pages/ProductWarehousePage"));
 
 /* =======================
    APP COMPONENT
@@ -107,6 +108,10 @@ function App() {
             <Route
               path="productHistory/:id"
               element={<ProductQuantityHistory />}
+            />
+            <Route
+              path="product-warehouse/:id"
+              element={<ProductWarehousePage />}
             />
           </Route>
 

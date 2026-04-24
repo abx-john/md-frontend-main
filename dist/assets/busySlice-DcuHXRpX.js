@@ -1,1 +1,0 @@
-import{o as e}from"./snackbarSlice-DRJPkN09.js";var t=e({name:`busy`,initialState:{loading:!1},reducers:{setBusy:(e,t)=>{e.loading=t.payload},startBusy:e=>{e.loading=!0},stopBusy:e=>{e.loading=!1}}}),{setBusy:n,startBusy:r,stopBusy:i}=t.actions,a=t.reducer,o=e=>e.busy.loading;export{i as a,r as i,o as n,n as r,a as t};

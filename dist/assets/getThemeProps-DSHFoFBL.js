@@ -1,0 +1,1 @@
+import{B as e,V as t}from"./Typography-CiIsqDRl.js";var n=t();function r(t){let{theme:n,name:r,props:i}=t;return!n||!n.components||!n.components[r]||!n.components[r].defaultProps?i:e(n.components[r].defaultProps,i)}export{n,r as t};
