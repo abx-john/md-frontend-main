@@ -52,11 +52,21 @@ export default function SaleList() {
         headerName: "No of Items",
         width: 200,
       },
+      {
+        field: "date",
+        headerName: "Date",
+        width: 150,
+      },
     ],
     []
   );
   const paymentColumns = [
     { field: 'id', headerName: 'ID', width: 90 },
+    {
+      field: 'date',
+      headerName: 'Date',
+      width: 130,
+    },
     {
       field: 'paid_amount',
       headerName: 'Paid Amount',
@@ -82,6 +92,7 @@ export default function SaleList() {
   const [submitting, setSubmitting] = useState(false);
   const [paymentMode, setPaymentMode] = useState("cash")
   const [paidAmount, setPaidAmount] = useState(0)
+  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().slice(0, 10))
 
 
 
@@ -89,6 +100,7 @@ export default function SaleList() {
     setDialogMode("view");
     setPaymentMode("cash")
     setPaidAmount(0)
+    setPaymentDate(new Date().toISOString().slice(0, 10))
     setForm(row);
     setDialogOpen(true);
   };
@@ -108,6 +120,7 @@ export default function SaleList() {
         id: form.id,
         mode: paymentMode,
         paid_amount: paidAmount,
+        date: paymentDate,
       });
       // success — refresh datatable
       setRefreshKey((k) => k + 1);
@@ -278,7 +291,7 @@ export default function SaleList() {
                     },
                   }}
                   pageSizeOptions={[5]}
-                  
+
                   disableRowSelectionOnClick
                 />
               </Box>
@@ -368,6 +381,15 @@ export default function SaleList() {
                     step: 1,
                   }}
                   onChange={(e) => { setPaidAmount(e.target.value) }}
+                  fullWidth
+                />
+                <TextField
+                  label="Payment Date"
+                  size="small"
+                  type="date"
+                  value={paymentDate}
+                  onChange={(e) => setPaymentDate(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
                   fullWidth
                 />
                 <Button type="submit" variant="outlined" disabled={submitting}>

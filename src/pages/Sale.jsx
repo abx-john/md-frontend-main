@@ -47,6 +47,7 @@ const Sale = () => {
         email: "",
     });
     const [customerErrors, setCustomerErrors] = useState({});
+    const [saleDate, setSaleDate] = useState(new Date().toISOString().slice(0, 10));
     const dispatch = useDispatch()
 
 
@@ -128,7 +129,8 @@ const Sale = () => {
             customer_id: customer.id,
             products: products,
             paymentMode,
-            paidAmount
+            paidAmount,
+            date: saleDate,
         }).then(res => {
             dispatch(showSnackbar({ message: "New Sales Created", severity: "success" }));
             setCustomer(null);
@@ -181,6 +183,19 @@ const Sale = () => {
                         e.preventDefault()
                         submitSales()
                     }} id="payment-form">
+                        <TextField
+                            margin="dense"
+                            id="sale-date"
+                            name="saleDate"
+                            label="Sale Date"
+                            fullWidth
+                            size="small"
+                            type="date"
+                            variant="outlined"
+                            value={saleDate}
+                            onChange={e => setSaleDate(e.target.value)}
+                            InputLabelProps={{ shrink: true }}
+                        />
                         <TextField
                             margin="dense"
                             id="total-amount"
@@ -696,7 +711,7 @@ const Sale = () => {
                     <Typography variant="h6">
                         Product Lists
 
-                       
+
 
                     </Typography>
                     <DataTableProduct rows={products} setRows={setProducts} warehouses={warehouses}></DataTableProduct>
